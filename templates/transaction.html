@@ -1,0 +1,25 @@
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>トランザクションサンプル</title>
+</head>
+<body>
+   <section>
+       <h1>商品購入</h1>
+       <ul>
+        {% for item in goods %}
+
+            <li>
+               <span>{{ item.name }}</span>
+               <span>{{ item.price }}円</span>
+               <form method="post">
+                   <input type="hidden" name="goods_id" value="{{ item.id }}">
+                   <input type="submit" value="購入する">
+               </form>
+           </li>
+           {% endfor %}
+        </ul>
+       <p>※サンプルのため購入は1商品 & 1個に固定</p>
+   </section>
+</body>
+</html>

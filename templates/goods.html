@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>サンプル</title>
+   <style type="text/css">
+       table, td, th {
+           border: solid black 1px;
+       }
+       table {
+           width: 200px;
+       }
+   </style>
+</head>
+<body>
+    <h2>表示する職種を選択してください</h2>
+    <form action="" method="">
+        <select name="order">
+        <option value="" {% if all_check %} checked {% endif %}>全員</option>
+        <option value="manager" {% if manager_check %} checked {% endif %}>マネージャー</option>
+        <option value="analyst" {% if analyst_check %} checked {% endif %}>アナリスト</option>
+        <option value="clerk" {% if clerk_check %} checked {% endif %}>一般職</option>
+        </select>
+        <input type="submit" value="表示">
+    </form>
+    <h3>社員一覧</h3>
+    <table>
+        <tr>
+            <th>社員番号</th>
+            <th>名前</th>
+            <th>役職</th>
+            <th>年齢</th>
+        </tr>
+
+        {% for item in jobs %}
+        <tr>
+             <td>{{ item.emp_id }}</td>
+             <td>{{ item.emp_name }}</td>
+             <td>{{ item.job }}</td>
+             <td>{{ item.age }}</td>
+        </tr>
+        {% endfor %}
+     </table>
+</body>
+</html>
+
+
+<!--
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>サンプル</title>
+   <style type="text/css">
+       table, td, th {
+           border: solid black 1px;
+       }
+       table {
+           width: 200px;
+       }
+   </style>
+</head>
+<body>
+   <h1>商品一覧</h1>
+   <form>
+       <input type="radio" name="order" value="ASC" {% if asc_check %} checked {% endif %}>昇順
+       <input type="radio" name="order" value="DESC" {% if desc_check %} checked {% endif %}>降順
+       <input type="submit" value="表示">
+   </form>
+   <table>
+       <tr>
+           <th>商品名</th>
+           <th>値段</th>
+       </tr>
+
+       {% for item in goods %}
+       <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.price }}</td>
+       </tr>
+       {% endfor %}
+    </table>
+</body>
+</html>
+-->
+

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>リクエスト使用例</title>
+</head>
+<body>
+   <h1>検索しよう</h1>
+   <a href="https://www.google.co.jp/search?q={{query}}" target="_blank">「{{query}}」をGoogleで検索する</a><br>
+   <a href="http://www.bing.com/search?q={{query}}" target="_blank">「{{query}}」をbingで検索する</a><br>
+   <a href="http://search.yahoo.co.jp/search?p={{query}}" target="_blank">「{{query}}」をyahooで検索する</a><br>
+   <p>このページをブックマークしてみましょう。<br>ブックマークからこのページにアクセスしても同じページが表示されます</p>
+   <form method="get">
+       <input type="text" name="query" value="{{query}}">
+       <input type="submit" value="送信">
+   </form>
+</body>
+</html>

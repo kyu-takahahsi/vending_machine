@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>サンプル</title>
+   <style type="text/css">
+       table, td, th {
+           border: solid black 1px;
+       }
+
+       table {
+           width: 600px;
+       }
+       p {
+           font-size: 15px
+       }
+       hr {
+            border-width: 1px 0px 0px 0px;
+            border-style: dashed;
+            border-color: black;
+            height: 10px;
+        }
+   </style>
+</head>
+<body>
+    <h1>{{message}}</h1>
+    {% if home %}
+    <form method="POST">
+        <label>値段　：<input type="text" name="my_money"></label><br>
+        <hr>
+        <table>
+            <tr>
+                <th>商品画像</th>
+                <th>商品名</th>
+                <th>価格</th>
+                <th>在庫数</th>
+                <th>選択</th>
+            </tr>
+        {% for item in goods %}
+            <tr>
+                <td><img src={{ item.image }}></td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.price }}</td>
+                <td>{{ item.stock }}</td>
+                {% if item.stock > 0 %}
+                <td><input type="radio" name="select_button" value={{item.id}} {{'checked' if button == "select_button"}}></td>
+                {% else %}
+                <td>売り切れ</td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </table>
+        <button type="submit" name="buy_drink" value="buy">商品購入</button>
+    </form>
+    {% else %}
+    <img src={{success}}>
+    <p>{{judge_money}}</p>
+    <p>{{judge_select}}</p>
+    <button onclick="history.back()">戻る</button>
+    {% endif %}
+</body>
+</html>

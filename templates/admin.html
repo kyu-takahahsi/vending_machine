@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>サンプル</title>
+   <style type="text/css">
+       table, td, th {
+           border: solid black 1px;
+       }
+       table {
+           width: 600px;
+       }
+       p {
+           font-size: 10px
+       }
+       hr {
+            border-width: 1px 0px 0px 0px;
+            border-style: dashed;
+            border-color: black;
+            height: 10px;
+        }
+   </style>
+</head>
+<body>
+    <h1>自動販売機管理ツール</h1>
+    <h2>新商品追加</h2>
+    <h3>{{add_message}}</h3>
+    <form method="POST" enctype="multipart/form-data">
+        <label>名前　：<input type="text" name="add_name"></label><br>
+        <label>値段　：<input type="text" name="add_price"></label><br>
+        <label>個数　：<input type="text" name="add_number"></label><br>
+        <p>＊全ての項目が入力選択必須</p>
+        <p>＊商品の値段、在庫数は0以上</p>
+        <input type="file" name="add_image">
+        <p>＊画像ファイルはJPEGもしくはPNGのみ</p>
+        <select name="status_selector">
+            <option value="" {% if nothing_check %} checked {% endif %}>選択してください</option>
+            <option value=1 {% if public_check %} checked {% endif %}>公開</option>
+            <option value=0 {% if private_check %} checked {% endif %}>非公開</option>
+        </select>
+        <p>＊公開、非公開を選択</p>
+        <button type="submit" name="add_drink" value="success">商品追加</button>
+    </form>
+        <hr>
+        <h3>≪商品情報変更≫</h3>
+        <h4>{{change_message}}</h4>
+    <table>
+        <tr>
+            <th>商品画像</th>
+            <th>商品名</th>
+            <th>価格</th>
+            <th>在庫数</th>
+            <th>ステータス</th>
+        </tr>
+       {% for item in goods %}
+        <tr>
+            <td><img src={{ item.image }}></td>
+            <td>{{ item.name }}</td>
+            <td>{{ item.price }}</td>
+            <form method="POST">
+                <td>
+                    <input type="text" name="change_stock" style="text-align:right" value={{item.stock}}>
+                    <button type="submit" name="change_stock_id" value={{item.id}}>変更</button>
+                </td>
+            </form>
+            <form method="POST">
+                <td>
+                    {% if item.status == 1 %}
+                    <button type="submit" name=change_status value={{item.id}}>公開</button>
+                    {% elif item.status == 0 %}
+                    <button type="submit" name=change_status value={{item.id}}>非公開</button>
+                    {% endif %}
+                </td>
+            </form>
+        </tr>
+       {% endfor %}
+    </table>
+</body>
+</html>

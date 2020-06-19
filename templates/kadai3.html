@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>課題3</title>
+</head>
+<body>
+   <h1>課題</h1>
+   <body>
+      {% if my_hand %}
+      <p>あなた：「{{my_hand}}」</p>
+      {% endif %}
+
+      {% if your_hand %}
+      <p>相手：「{{your_hand}}」</p>
+      {% endif %}
+
+      {% if result %}
+      <p>勝敗：「{{result}}」</p>
+      {% endif %}
+
+    <form method="post">
+        <input type="radio" name="my_hand" value="グー" {{'checked' if my_hand == 'グー'}}>グー
+        <input type="radio" name="my_hand" value="チョキ" {{'checked' if my_hand == 'チョキ'}}>チョキ
+        <input type="radio" name="my_hand" value="パー" {{'checked' if hmy_and == 'パー'}}>パー<br>
+        <input type="submit" value="勝負!">
+    </form>
+</body>
+</html>

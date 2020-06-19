@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+   <meta charset="UTF-8">
+   <title>リクエスト使用例</title>
+</head>
+<body>
+   <h2>性別を選択してください</h2>
+    {% if gender %}
+        <p>あなたの性別は「{{gender}}」です</p>
+    {% endif %}
+    
+    <form method="post">
+        <input type="radio" name="gender" value="男" {{'checked' if gender == '男'}}>男
+        <input type="radio" name="gender" value="女" {{'checked' if gender == '女'}}>女
+        <input type="submit" value="送信">
