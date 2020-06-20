@@ -1,19 +1,3 @@
-from flask import Flask
-app = Flask(__name__)
-#HTMLに反映
-from flask import render_template
-#HTMLから抽出
-from flask import request
-#ランダム選択
-import random
-#データベース操作
-import mysql.connector
-from mysql.connector import errorcode
-#正規表現
-import re
-#時間取得
-import datetime
-
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #管理者画面
 @app.route("/admin", methods=["GET", "POST"])
@@ -62,9 +46,11 @@ def admin():
 
     #在庫数が変更された場合、値を取得
     if "change_stock_id" in request.form.keys():
-        change_stock = int(request.form.get("change_stock"))
+        change_stock = request.form.get("change_stock")
         change_stock_id = int(request.form.get("change_stock_id"))
-
+        if change_stock != None and change_stock != "" and change_stock.isdecimal() == True:
+            change_stock = int(request.form.get("change_stock"))
+            print("実行されているよ")
 
     #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     try :
@@ -111,13 +97,19 @@ def admin():
         #在庫変更のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         elif "change_stock_id" in request.form.keys():
             #入力欄の値が変更されたときのみデータベース更新
-            if update_stock["stock"] != change_stock:
+            if update_stock["stock"] != change_stock and change_stock != "" and change_stock.isdecimal() == True:
                 stock_update_query_1 = f'UPDATE stock_table SET stock = {change_stock}, update_date = LOCALTIME() WHERE drink_id = {update_stock["id"]}'
                 stock_update_query_2 = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {update_stock["id"]}'
                 cursor.execute(stock_update_query_1)
                 cursor.execute(stock_update_query_2)
                 cnx.commit()
                 change_message = "＊" + update_stock["name"] + "の在庫数が変更されました"
+
+            elif update_stock["stock"] != change_stock and change_stock != "" and change_stock.isdecimal() == False:
+                change_message = "＊在庫数の値は0以上の整数で入力してください"
+
+            elif update_stock["stock"] != change_stock and change_stock == "":
+                change_message = "＊在庫数の値を入力してください"
 
             #入力欄の値が変更されていない
             else:
