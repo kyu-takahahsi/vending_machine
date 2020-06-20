@@ -1,3 +1,18 @@
+from flask import Flask
+app = Flask(__name__)
+#HTMLに反映
+from flask import render_template
+#HTMLから抽出
+from flask import request
+#ランダム選択
+import random
+#データベース操作
+import mysql.connector
+from mysql.connector import errorcode
+#正規表現
+import re
+#時間取得
+import datetime
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #管理者画面
 @app.route("/admin", methods=["GET", "POST"])
