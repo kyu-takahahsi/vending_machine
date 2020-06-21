@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, flash, redirect, url_for
 app = Flask(__name__)
 #HTMLに反映
 from flask import render_template
@@ -13,6 +13,14 @@ from mysql.connector import errorcode
 import re
 #時間取得
 import datetime
+#画像保存のため
+import os
+from PIL import Image
+#画像保存のため
+from werkzeug.utils import secure_filename
+UPLOAD_FOLDER = '/Users/kytakahashi/Downloads/vending_machine/static/'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
 #管理者画面
 @app.route("/admin", methods=["GET", "POST"])
@@ -30,6 +38,7 @@ def admin():
     add_price = ""
     add_number = ""
     status_selector = ""
+    filename = ""
 
     #HTML受け渡し(判定)
     goods = ""
@@ -49,11 +58,21 @@ def admin():
     #ボタンが押された場合にしか値を受け取らないーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #商品追加された場合、値を取得
     if "add_drink" in request.form.keys():
-        add_image = request.files.get("file")
+        add_image = request.files.get("add_image")
         add_name = request.form.get("add_name")
         add_price = request.form.get("add_price")
         add_number = request.form.get("add_number")
-        status_selector = request.form.get("status_selector","")
+        status_selector = request.form.get("status_selector")
+        print(add_image)
+        #これでformから受け取った画像を保存する
+        #if re.search(r'jpeg|jpg|png', add_image):
+        if 'jpeg' or 'png' or 'jpg' in add_image == True:
+            filename = secure_filename(add_image.filename)
+            add_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        else:
+            add_image = ""
+
+
 
     #ステータス変更された場合、値を取得
     if "change_status" in request.form.keys():
@@ -81,8 +100,12 @@ def admin():
         #常時実行するSQL
         query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
 
-        #SQL実行
+        #SQL実行(在庫数やステータスの値と変更した値の比較のため)
         cursor.execute(query)
+
+        #SQLに画像のパスを保存する
+        if add_image != "" or add_image != None:
+            drink_image = "../static/" + filename
 
 
         #SQLで取得した値を格納(HTMLに送るためのリスト)
@@ -102,7 +125,7 @@ def admin():
         if "add_drink" in request.form.keys():
             #全ての項目が入力され、値段と在庫数が整数の場合
             if (add_image != "" and add_name != "" and add_price != "" and add_number != "" and status_selector != "") and (add_number.isdecimal() == True and add_price.isdecimal() == True) and (int(add_price) >= 0 and int(add_number) >= 0) :
-                drink_query = f"INSERT INTO drink_table (drink_image, drink_name, price, edit_date, update_date, status) VALUES ('{add_image}', '{add_name}', {add_price}, LOCALTIME(), LOCALTIME(), {status_selector})"
+                drink_query = f"INSERT INTO drink_table (drink_image, drink_name, price, edit_date, update_date, status) VALUES ('{drink_image}', '{add_name}', {add_price}, LOCALTIME(), LOCALTIME(), {status_selector})"
                 stock_query = f"INSERT INTO stock_table (drink_name, stock, edit_date, update_date) VALUES ('{add_name}', {add_number}, LOCALTIME(), LOCALTIME())"
                 cursor.execute(drink_query)
                 cursor.execute(stock_query)
@@ -198,7 +221,6 @@ def admin():
     #HTMLへ変数を送るーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     return render_template("admin.html", **params)
 
-
 #購入者画面-----------------------------------------------------------------
 @app.route("/user", methods=["GET", "POST"])
 def user():
@@ -268,7 +290,7 @@ def user():
                     judge_select = "<<<お釣りは" + str(my_money - bought["price"]) + "円です>>>"
                     #在庫数変更のクエリ
                     stock_update_query = f'UPDATE stock_table SET stock = {bought["stock"]-1} WHERE drink_id = "{bought["id"]}"'
-                    history_query = f'INSERT INTO history_table (drink_id,order_date) VALUES ({bought["id"]}, LOCALTIME())'
+                    history_query = f'INSERT INTO history_table (drink_id, order_date) VALUES ({bought["id"]}, LOCALTIME())'
                     cursor.execute(stock_update_query)
                     cursor.execute(history_query)
                     cnx.commit()
