@@ -71,10 +71,10 @@ def admin():
             add_image = ""
 
 
-
     #ステータス変更された場合、値を取得
     if "change_status" in request.form.keys():
         change_status = int(request.form.get("change_status"))
+
 
     #在庫数が変更された場合、値を取得
     if "change_stock_id" in request.form.keys():
@@ -218,6 +218,7 @@ def admin():
 
     #HTMLへ変数を送るーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     return render_template("admin.html", **params)
+
 
 #購入者画面-----------------------------------------------------------------
 @app.route("/user", methods=["GET", "POST"])
