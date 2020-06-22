@@ -15,7 +15,7 @@ import re
 import datetime
 #画像保存のため
 import os
-from PIL import Image
+#from PIL import Image
 #画像保存のため
 from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = '/Users/kytakahashi/Downloads/vending_machine/static/'
@@ -63,11 +63,9 @@ def admin():
         add_price = request.form.get("add_price")
         add_number = request.form.get("add_number")
         status_selector = request.form.get("status_selector")
-        print(add_image)
         #これでformから受け取った画像を保存する
-        #if re.search(r'jpeg|jpg|png', add_image):
-        if 'jpeg' or 'png' or 'jpg' in add_image == True:
-            filename = secure_filename(add_image.filename)
+        filename = secure_filename(add_image.filename)
+        if filename != "" and filename != None:
             add_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         else:
             add_image = ""
@@ -247,7 +245,7 @@ def user():
 
 
     #ボタンが押された場合にしか値を受け取らないーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #商品追加された場合、値を取得
+    #商品購入が押された場合、値を取得
     if "buy_drink" in request.form.keys():
         my_money = request.form.get("my_money")
         select_button = request.form.get("select_button")
