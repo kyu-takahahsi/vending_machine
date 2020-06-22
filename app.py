@@ -15,7 +15,6 @@ import re
 import datetime
 #画像保存のため
 import os
-#from PIL import Image
 #画像保存のため
 from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = '/Users/kytakahashi/Downloads/vending_machine/static/'
