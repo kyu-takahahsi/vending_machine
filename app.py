@@ -17,11 +17,7 @@ import datetime
 import os
 #画像保存のため
 from werkzeug.utils import secure_filename
-UPLOAD_FOLDER = '/Users/kytakahashi/Downloads/vending_machine/static/'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-
 UPLOAD_FOLDER = './static/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
