@@ -21,14 +21,63 @@ UPLOAD_FOLDER = '/Users/kytakahashi/Downloads/vending_machine/static/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+
+UPLOAD_FOLDER = './static/'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+host = 'localhost' # データベースのホスト名又はIPアドレス
+username = 'root'  # MySQLのユーザ名
+passwd   = 'kaA1ybB2ucC3d2c'    # MySQLのパスワード
+dbname   = 'mydb'    # データベース名
+
 #管理者画面
+#ホーム画面
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
-    host = 'localhost' # データベースのホスト名又はIPアドレス
-    username = 'root'  # MySQLのユーザ名
-    passwd   = 'kaA1ybB2ucC3d2c'    # MySQLのパスワード
-    dbname   = 'mydb'    # データベース名
+    #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    try :
+        cnx = mysql.connector.connect(host=host, user=username, password=passwd, database=dbname)
+        cursor = cnx.cursor()
 
+
+        #常時実行するSQL
+        query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
+        cursor.execute(query)
+
+
+        #SQLで取得した値を格納(HTMLに送るためのリスト)
+        goods = []
+        for (id, image, name, price, stock, status) in cursor:
+            item = {"id" : id, "image" : image, "name" : name, "price" : price, "stock" : stock, "status" : status}
+            goods.append(item)
+
+
+        #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        params = {
+            "goods" : goods
+        }
+
+
+    #もしユーザー名やパスワードなどに誤りがあった場合エラーを出すーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("ユーザ名かパスワードに問題があります。")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("データベースが存在しません。")
+        else:
+            print(err)
+    else:
+        cnx.close()
+
+
+    #HTMLへ変数を送るーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    return render_template("admin.html", **params)
+
+
+#商品追加画面
+@app.route("/admin/add", methods=["POST"])
+def admin_add_item():
 
     #変数定義ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #追加
@@ -40,19 +89,7 @@ def admin():
     filename = ""
 
     #HTML受け渡し(判定)
-    goods = ""
     add_message = ""
-    change_message = ""
-
-    #ステータス変更
-    change_status = ""
-    update_status = ""
-
-    #在庫数変更
-    change_stock = ""
-    change_stock_id = ""
-    update_stock = ""
-
 
     #ボタンが押された場合にしか値を受け取らないーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #商品追加された場合、値を取得
@@ -70,24 +107,6 @@ def admin():
             add_image = ""
 
 
-    #ステータス変更された場合、値を取得
-    if "change_status" in request.form.keys():
-        change_status = int(request.form.get("change_status"))
-
-
-    #在庫数が変更された場合、値を取得
-    if "change_stock_id" in request.form.keys():
-        change_stock = request.form.get("change_stock")
-        change_stock_id = int(request.form.get("change_stock_id"))
-        #在庫数の値が数字ならint型に、文字列なら"文字列"に、空欄なら""に
-        if change_stock != None and change_stock != "" and change_stock.isdecimal() == True:
-            change_stock = int(request.form.get("change_stock"))
-        elif change_stock != None and change_stock != "" and change_stock.isdecimal() == False:
-            change_stock = "文字列"
-        else:
-            change_stock = ""
-
-
     #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     try :
         cnx = mysql.connector.connect(host=host, user=username, password=passwd, database=dbname)
@@ -97,91 +116,32 @@ def admin():
         #常時実行するSQL
         query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
 
-        #SQL実行(在庫数やステータスの値と変更した値の比較のため)
-        cursor.execute(query)
-
         #SQLに画像のパスを保存する
-        if add_image != "" or add_image != None:
+        if add_image != "" and add_image != None:
             drink_image = "../static/" + filename
-
-
-        #SQLで取得した値を格納(HTMLに送るためのリスト)
-        goods = []
-        for (id, image, name, price, stock, status) in cursor:
-            item = {"id" : id, "image" : image, "name" : name, "price" : price, "stock" : stock, "status" : status}
-            goods.append(item)
-            #ステータス変更ボタンの押された商品のidと同じ商品の情報を変数に格納
-            if item["id"] == change_status:
-                update_status = item
-            #在庫数変更ボタンの押された商品のidと同じ商品の情報を変数に格納
-            if item["id"] == change_stock_id:
-                update_stock = item
 
 
         #商品追加のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         if "add_drink" in request.form.keys():
-            #全ての項目が入力され、値段と在庫数が整数の場合
-            if (add_image != "" and add_name != "" and add_price != "" and add_number != "" and status_selector != "") and (add_number.isdecimal() == True and add_price.isdecimal() == True) and (int(add_price) >= 0 and int(add_number) >= 0) :
+            #全ての項目が入力されていない
+            if add_image == "" or add_name == "" or add_price == "" or add_number == "" or status_selector == "":
+                add_message = "＊追加失敗：全ての項目を条件通り入力してください"
+
+            #在庫数と値段の値が数字ではない
+            elif not add_number.isdecimal() or not add_price.isdecimal():
+                add_message = "＊追加失敗：在庫数と値段は数字で入力してください"
+
+            elif int(add_price) < 0 or int(add_number) < 0:
+                add_message = "＊追加失敗：在庫数と値段は0以上の数字で入力してください"
+
+            #全て入力され、在庫数と値段は0以上の数字(条件通り)
+            else:
                 drink_query = f"INSERT INTO drink_table (drink_image, drink_name, price, edit_date, update_date, status) VALUES ('{drink_image}', '{add_name}', {add_price}, LOCALTIME(), LOCALTIME(), {status_selector})"
                 stock_query = f"INSERT INTO stock_table (drink_name, stock, edit_date, update_date) VALUES ('{add_name}', {add_number}, LOCALTIME(), LOCALTIME())"
                 cursor.execute(drink_query)
                 cursor.execute(stock_query)
                 cnx.commit()
                 add_message = "＊追加成功：商品が正常に追加されました"
-
-            #条件にあっていない入力や空欄がある
-            else:
-                add_message = "＊追加失敗：全ての項目を条件通り入力してください"
-
-
-        #在庫変更のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        elif "change_stock_id" in request.form.keys():
-            #入力欄の値が変更されたときのみデータベース更新
-            if update_stock["stock"] != change_stock and change_stock != "" and (change_stock != "文字列" and change_stock != "") :
-                stock_update_query_1 = f'UPDATE stock_table SET stock = {change_stock}, update_date = LOCALTIME() WHERE drink_id = {update_stock["id"]}'
-                stock_update_query_2 = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {update_stock["id"]}'
-                cursor.execute(stock_update_query_1)
-                cursor.execute(stock_update_query_2)
-                cnx.commit()
-                change_message = "＊成功：" + update_stock["name"] + "の在庫数が変更されました"
-
-            #入力欄の値が文字列で入力されている
-            elif update_stock["stock"] != change_stock and change_stock == "文字列":
-                change_message = "＊エラー：在庫数の値は0以上の整数で入力してください"
-
-            #入力欄の値が入力されていない
-            elif update_stock["stock"] != change_stock and change_stock == "":
-                change_message = "＊エラー：在庫数の値を入力してください"
-
-            #入力欄の値が変更されていない
-            else:
-                change_message = "＊エラー：" + update_stock["name"] + "の値が変更されていません"
-
-
-        #公開・非公開のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        elif "change_status" in request.form.keys():
-            #現在のステータスが公開(1)の場合、非公開(0)に変更
-            if update_status["status"] == 1:
-                status_update_query_1 = f'UPDATE drink_table SET status = 0 WHERE drink_id = {update_status["id"]}'
-                status_update_query_2 = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {update_status["id"]}'
-                cursor.execute(status_update_query_1)
-                cursor.execute(status_update_query_2)
-                cnx.commit()
-                change_message = "＊成功：" + update_status["name"] + "を非公開にしました"
-
-            #現在のステータスが非公開(0)の場合、公開(1)に変更
-            elif update_status["status"] == 0:
-                status_update_query_1 = f'UPDATE drink_table SET status = 1 WHERE drink_id = {update_status["id"]}'
-                status_update_query_2 = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {update_status["id"]}'
-                cursor.execute(status_update_query_1)
-                cursor.execute(status_update_query_2)
-                cnx.commit()
-                change_message = "＊成功：" + update_status["name"] + "を公開にしました"
-
-
-        #どのボタンも押されていない場合(最初のページを表示するがここでは何もしない)ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        else:
-            pass
 
 
         #いつでも実行する表示のためのSQLーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -198,6 +158,86 @@ def admin():
         #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         params = {
         "add_message" : add_message,
+        "goods" : goods
+        }
+
+
+    #もしユーザー名やパスワードなどに誤りがあった場合エラーを出すーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("ユーザ名かパスワードに問題があります。")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("データベースが存在しません。")
+        else:
+            print(err)
+    else:
+        cnx.close()
+
+
+    #HTMLへ変数を送るーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    return render_template("admin.html", **params)
+
+
+#在庫数変更
+@app.route("/admin/stock", methods=["POST"])
+def admin_stock():
+
+    #在庫数変更の商品情報
+    drink_id = ""
+    drink_name = ""
+    stock = ""
+
+    #メッセージ
+    change_message = ""
+
+
+    #在庫数が変更された場合、値を取得
+    if "change_stock" in request.form.keys():
+        drink_id = request.form.get("drink_id")
+        drink_name = request.form.get("drink_name")
+        stock = request.form.get("stock")
+
+
+    #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    try:
+        cnx = mysql.connector.connect(host=host, user=username, password=passwd, database=dbname)
+        cursor = cnx.cursor()
+
+
+        #在庫変更のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        if "change_stock" in request.form.keys():#うまい具合にNoneにならなければ消そうね
+            #空欄
+            if stock == "":
+                change_message = "＊失敗：金額は空欄ではなく0以上の数字を入力してください"
+
+            #文字列もしくはマイナスの値
+            elif not stock.isdecimal() or int(stock) < 0:
+                change_message = "＊失敗：金額は0以上の数字で入力してください"
+
+            #0以上の数字(条件通り)
+            else:
+                stock_update = f'UPDATE stock_table SET stock = {stock} WHERE drink_id = {drink_id}'
+                date_update = f'UPDATE stock_table SET update_date = LOCALTIME() WHERE drink_id = {drink_id}'
+                cursor.execute(stock_update)
+                cursor.execute(date_update)
+                cnx.commit()
+                change_message = "＊成功：" + drink_name + "の在庫数が変更されました"
+
+
+        #常時実行するSQL
+        query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
+        cursor.execute(query)
+
+
+        #SQLで取得した値を格納(HTMLに送るためのリスト)
+        goods = []
+        for (id, image, name, price, stock, status) in cursor:
+            item = {"id" : id, "image" : image, "name" : name, "price" : price, "stock" : stock, "status" : status}
+            goods.append(item)
+
+
+        #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        params = {
         "change_message" : change_message,
         "goods" : goods
         }
@@ -219,14 +259,86 @@ def admin():
     return render_template("admin.html", **params)
 
 
+#ステータス変更
+@app.route("/admin/status", methods=["POST"])
+def admin_status():
+
+    #ステータス変更の商品情報
+    drink_id = ""
+    drink_name = ""
+    next_status = ""
+
+    #メッセージ
+    change_message = ""
+
+
+    #ステータス変更が押された場合、値を取得
+    if "change_status" in request.form.keys():
+        drink_id = request.form.get("drink_id")
+        drink_name = request.form.get("drink_name")
+        next_status = request.form.get("change_status")
+
+
+    #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    try :
+        cnx = mysql.connector.connect(host=host, user=username, password=passwd, database=dbname)
+        cursor = cnx.cursor()
+
+
+        #公開・非公開のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        if "change_status" in request.form.keys():
+            #押されたボタン(現在のステータス)とは逆のステータスに変更
+            if drink_id != "" and drink_id != None:
+                status_update = f'UPDATE drink_table SET status = {next_status} WHERE drink_id = {drink_id}'
+                date_update = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {drink_id}'
+                cursor.execute(status_update)
+                cursor.execute(date_update)
+                cnx.commit()
+                if next_status == "1":
+                    change_message = "＊成功：" + drink_name + "のステータスを「公開」に変更しました"
+                elif next_status == "0":
+                    change_message = "＊成功：" + drink_name + "のステータスを「非公開」に変更しました"
+
+
+        #常時実行するSQL
+        query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
+        cursor.execute(query)
+
+
+        #SQLで取得した値を格納(HTMLに送るためのリスト)
+        goods = []
+        for (id, image, name, price, stock, status) in cursor:
+            item = {"id" : id, "image" : image, "name" : name, "price" : price, "stock" : stock, "status" : status}
+            goods.append(item)
+
+
+        #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        params = {
+            "change_message" : change_message,
+            "goods" : goods
+        }
+
+
+    #もしユーザー名やパスワードなどに誤りがあった場合エラーを出すーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("ユーザ名かパスワードに問題があります。")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("データベースが存在しません。")
+        else:
+            print(err)
+    else:
+        cnx.close()
+
+
+    #HTMLへ変数を送るーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+    return render_template("admin.html", **params)
+
+
+
 #購入者画面-----------------------------------------------------------------
 @app.route("/user", methods=["GET", "POST"])
 def user():
-    host = 'localhost' # データベースのホスト名又はIPアドレス
-    username = 'root'  # MySQLのユーザ名
-    passwd   = 'kaA1ybB2ucC3d2c'    # MySQLのパスワード
-    dbname   = 'mydb'    # データベース名
-
 
     #変数定義ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #購入
@@ -245,7 +357,7 @@ def user():
 
 
     #ボタンが押された場合にしか値を受け取らないーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-    #商品購入が押された場合、値を取得
+    #商品追加された場合、値を取得
     if "buy_drink" in request.form.keys():
         my_money = request.form.get("my_money")
         select_button = request.form.get("select_button")

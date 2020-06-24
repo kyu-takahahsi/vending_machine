@@ -29,7 +29,7 @@
     <h1>自動販売機管理ツール</h1>
     <h2>新商品追加</h2>
     <h3>{{add_message}}</h3>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" action="/admin/add">
         <label>名前　：<input type="text" name="add_name"></label><br>
         <label>値段　：<input type="text" name="add_price"></label><br>
         <label>個数　：<input type="text" name="add_number"></label><br>
@@ -61,18 +61,22 @@
             <td><img src="{{ item.image }}"></td>
             <td>{{ item.name }}</td>
             <td>{{ item.price }}</td>
-            <form method="POST">
+            <form method="POST" action="/admin/stock">
+                <input type="hidden" name="drink_id" value="{{item.id}}">
+                <input type="hidden" name="drink_name" value="{{ item.name }}">
                 <td>
-                    <input type="text" name="change_stock" style="text-align:right" value={{item.stock}}>
-                    <button type="submit" name="change_stock_id" value={{item.id}}>変更</button>
+                    <label><input type="text" name="stock" style="text-align:right" value={{item.stock}}>個</label>
+                    <button type="submit" name="change_stock" value="" >変更</button>
                 </td>
             </form>
-            <form method="POST">
+            <form method="POST" action= "/admin/status">
+                    <input type="hidden" name="drink_id" value="{{item.id}}">
+                    <input type="hidden" name="drink_name" value="{{ item.name }}">
                 <td>
                     {% if item.status == 1 %}
-                    <button type="submit" name=change_status value={{item.id}}>公開</button>
+                    <button type="submit" name="change_status" value=0 >公開</button>
                     {% elif item.status == 0 %}
-                    <button type="submit" name=change_status value={{item.id}}>非公開</button>
+                    <button type="submit" name="change_status" value=1>非公開</button>
                     {% endif %}
                 </td>
             </form>
