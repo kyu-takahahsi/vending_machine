@@ -18,10 +18,12 @@ import os
 #画像保存のため
 from werkzeug.utils import secure_filename
 #18章ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+#画像のためのパスや定義
 UPLOAD_FOLDER = './static/'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+#データベース接続の鍵
 host = 'localhost' # データベースのホスト名又はIPアドレス
 username = 'root'  # MySQLのユーザ名
 passwd   = 'kaA1ybB2ucC3d2c'    # MySQLのパスワード
@@ -111,6 +113,7 @@ def admin_add_item():
 
         #常時実行するSQL
         query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
+
 
         #SQLに画像のパスを保存する
         if add_image != "" and add_image != None:
@@ -383,6 +386,7 @@ def user():
 
         #商品購入ボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         if "buy_drink" in request.form.keys():
+            #どちらも空欄
             if my_money == "" and drink_id == "":
                 message = "自動販売機結果"
                 judge_money = "＊失敗：お金を投入してください"
@@ -431,10 +435,10 @@ def user():
                 cnx.commit()
                 success = bought["image"]
 
+        #ホーム画面
         else:
             message = "自動販売機"
             home = "home"
-
 
 
         #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
