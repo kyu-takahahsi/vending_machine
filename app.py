@@ -331,7 +331,6 @@ def admin_status():
     return render_template("admin.html", **params)
 
 
-
 #購入者画面-----------------------------------------------------------------
 @app.route("/user", methods=["GET", "POST"])
 def user():
@@ -339,7 +338,9 @@ def user():
     #変数定義ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #購入
     my_money = ""
-    select_button = ""
+    drink_id = ""
+    drink_name = ""
+    drink_price = ""
 
     #HTML受け渡し(判定)
     message = ""
@@ -354,12 +355,10 @@ def user():
 
     #ボタンが押された場合にしか値を受け取らないーーーーーーーーーーーーーーーーーーーーーーーーーーーー
     #商品追加された場合、値を取得
-    if "buy_drink" in request.form.keys():
-        my_money = request.form.get("my_money")
-        select_button = request.form.get("select_button")
-        #取得した値がもし文字列や数字ならdrink_idをint型にネスト(下記で条件分岐するため)
-        if select_button != None and select_button != "":
-            select_button = int(select_button)
+    my_money = request.form.get("my_money", "")
+    drink_id = request.form.get("drink_id", "")
+    drink_name = request.form.get("drink_name", "")
+    drink_price = request.form.get("drink_price", "")
 
 
     #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -368,95 +367,86 @@ def user():
         cursor = cnx.cursor()
 
 
-        #いつでも実行する表示のためのSQLーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        query = "SELECT dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, dt.status as status, st.stock as stock FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id WHERE stock IS NOT NULL and status = 1"
+        #常時実行するSQL
+        query = "SELECT  dt.drink_id as drink_id, dt.drink_image as drink_image, dt.drink_name as drink_name, dt.price as price, st.stock as stock, dt.status as status FROM drink_table as dt LEFT JOIN stock_table as st ON dt.drink_id = st.drink_id"
         cursor.execute(query)
 
 
-       #SQLで取得した値を格納(HTMLに送るためのリスト)ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+        #SQLで取得した値を格納(HTMLに送るためのリスト)
         goods = []
-        for (id, image, name, price, status, stock) in cursor:
-            item = {"id" : id, "image" : image, "name" : name, "price" : price, "status" : status, "stock" : stock}
+        for (id, image, name, price, stock, status) in cursor:
+            item = {"id" : id, "image" : image, "name" : name, "price" : price, "stock" : stock, "status" : status}
             goods.append(item)
-            #商品購入ボタンの押された商品のidと同じ商品の情報を変数に格納
-            if item["id"] == select_button:
+            if str(item["id"]) == drink_id:
                 bought = item
 
 
         #商品購入ボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         if "buy_drink" in request.form.keys():
-            #金額・商品共に数字が入力されており、足りている
-            if (my_money != "" and my_money.isdecimal() == True) and select_button != None and bought != "":
-                my_money = int(my_money)
-                bought["price"] = int(bought["price"])
-                bought["stock"] = int(bought["stock"])
-                if my_money >= bought["price"] and bought["stock"] > 0 and bought["status"] != "0":
+            if my_money == "" and drink_id == "":
+                message = "自動販売機結果"
+                judge_money = "＊失敗：お金を投入してください"
+                judge_select = "＊失敗：商品を選択してください"
+
+            #金額が入力されていない
+            elif my_money == "":
+                message = "自動販売機結果"
+                judge_money = "＊失敗：お金を投入してください"
+
+            #商品が選択されていない
+            elif drink_id == "":
+                message = "自動販売機結果"
+                judge_select = "＊失敗：商品を選択してください"
+
+            #文字列が入力されている
+            elif not my_money.isdecimal():
+                message = "自動販売機結果"
+                judge_money = "＊失敗：金額は数字で入力してください"
+
+            #金額・商品共に条件通り入力されているが、公開されていない
+            elif bought == "" :
                     message = "自動販売機結果"
-                    judge_money = "＊ガシャコン！！" + bought["name"] + "が買えました！＊"
-                    judge_select = "<<<お釣りは" + str(my_money - bought["price"]) + "円です>>>"
-                    #在庫数変更のクエリ
-                    stock_update_query = f'UPDATE stock_table SET stock = {bought["stock"]-1} WHERE drink_id = "{bought["id"]}"'
-                    history_query = f'INSERT INTO history_table (drink_id, order_date) VALUES ({bought["id"]}, LOCALTIME())'
-                    cursor.execute(stock_update_query)
-                    cursor.execute(history_query)
-                    cnx.commit()
-                    success = bought["image"]
+                    judge_money = "＊失敗：申し訳ありません、この商品は現在お売りすることができません"
 
-                #金額・商品共に入力されているが、在庫がない
-                elif my_money >= bought["price"] and bought["stock"] == 0 and bought["status"] != "0":
+            #金額・商品共に条件通り入力されているが、公開されていない
+            elif bought["stock"] == 0:
                     message = "自動販売機結果"
-                    judge_money = "＊現在在庫がありません"
+                    judge_money = "＊失敗：現在在庫がありません"
 
-                #金額・商品共に入力されているが、金額が足りていない
-                else:
+            #金額・商品共に条件通り入力されているが、お金が足りていない
+            elif int(drink_price) > int(my_money):
                     message = "自動販売機結果"
-                    judge_money = "＊お金が" + str(bought["price"] - my_money) + "円足りません"
+                    judge_money = "＊失敗：投入金額が" + str(bought["price"]- int(my_money)) + "円足りません"
 
-            #金額・商品共に数字が入力されており、足りているが公開されていない
-            elif (my_money != "" and my_money.isdecimal() == True) and select_button != None and bought == "":
-                    message = "自動販売機結果"
-                    judge_money = "＊申し訳ありません、この商品は現在お売りすることができません"
+            #金額・商品共に条件通り入力されている(購入成功)
+            else:
+                message = "自動販売機結果"
+                judge_money = "＊成功：ガシャコン！！" + drink_name + "が買えました！＊"
+                judge_select = "<<<お釣りは" + str(int(my_money) - bought["price"]) + "円です>>>"
+                #在庫数変更のクエリ
+                stock_update = f'UPDATE stock_table SET stock = {bought["stock"]-1} WHERE drink_id = {drink_id}'
+                history_update = f'INSERT INTO history_table (drink_id, order_date) VALUES ({drink_id}, LOCALTIME())'
+                cursor.execute(stock_update)
+                cursor.execute(history_update)
+                cnx.commit()
+                success = bought["image"]
 
-
-            #金額入力もしくは商品の選択が行われていない
-            elif (my_money == "" or my_money.isdecimal() == False) or select_button == None:
-                #金額、商品共に入力されていない
-                if my_money == "" and select_button == None:
-                    message = "自動販売機結果"
-                    judge_money = "＊お金を投入してください"
-                    judge_select = "＊商品を選択してください"
-
-                #商品が選択されていない
-                elif my_money == "":
-                    message = "自動販売機結果"
-                    judge_select = "＊お金を投入してください"
-
-                #金額が入力されていない
-                elif select_button == None :
-                    message = "自動販売機結果"
-                    judge_money = "＊商品を選択してください"
-
-                #金額が数字ではない
-                else:
-                    message = "自動販売機結果"
-                    judge_money = "＊金額は数字で入力してください"
-
-
-        ##どのボタンも押されていない場合(最初のページを表示する)ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         else:
             message = "自動販売機"
             home = "home"
 
 
+
         #値の入った変数やリストをHTMLに渡すための変数に格納ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
         params = {
-        "success" : success,
-        "judge_money" : judge_money,
-        "judge_select" : judge_select,
-        "message" : message,
-        "goods" : goods,
-        "home" : home
+            "success" : success,
+            "judge_money" : judge_money,
+            "judge_select" : judge_select,
+            "message" : message,
+            "goods" : goods,
+            "home" : home
         }
+
 
 
     #もしユーザー名やパスワードなどに誤りがあった場合エラーを出すーーーーーーーーーーーーーーーーーーーーーーーーーーーー
