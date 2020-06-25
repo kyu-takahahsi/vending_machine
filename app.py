@@ -207,11 +207,11 @@ def admin_stock():
         if "change_stock" in request.form.keys():#うまい具合にNoneにならなければ消そうね
             #空欄
             if stock == "":
-                change_message = "＊失敗：金額は空欄ではなく0以上の数字を入力してください"
+                change_message = "＊失敗：在庫数は空欄ではなく0以上の数字を入力してください"
 
             #文字列もしくはマイナスの値
             elif not stock.isdecimal() or int(stock) < 0:
-                change_message = "＊失敗：金額は0以上の数字で入力してください"
+                change_message = "＊失敗：在庫数は0以上の数字で入力してください"
 
             #0以上の数字(条件通り)
             else:
