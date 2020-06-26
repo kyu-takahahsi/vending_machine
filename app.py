@@ -130,6 +130,7 @@ def admin_add_item():
             elif not add_number.isdecimal() or not add_price.isdecimal():
                 add_message = "＊追加失敗：在庫数と値段は数字で入力してください"
 
+            #在庫数が0以下の値
             elif int(add_price) < 0 or int(add_number) < 0:
                 add_message = "＊追加失敗：在庫数と値段は0以上の数字で入力してください"
 
@@ -190,11 +191,10 @@ def admin_stock():
     change_message = ""
 
 
-    #在庫数が変更された場合、値を取得
-    if "change_stock" in request.form.keys():
-        drink_id = request.form.get("drink_id")
-        drink_name = request.form.get("drink_name")
-        stock = request.form.get("stock")
+    #在庫数が変更された場合、値を取得(ボタンが押されたときに値を取りたい)
+    drink_id = request.form.get("drink_id", "")
+    drink_name = request.form.get("drink_name", "")
+    stock = request.form.get("stock", "")
 
 
     #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -204,8 +204,8 @@ def admin_stock():
 
 
         #在庫変更のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        if "change_stock" in request.form.keys():#うまい具合にNoneにならなければ消そうね
-            #空欄
+        if "change_stock" in request.form.keys():
+            #値が入力されておらず空欄のまま
             if stock == "":
                 change_message = "＊失敗：在庫数は空欄ではなく0以上の数字を入力してください"
 
