@@ -412,7 +412,7 @@ def user():
                     message = "自動販売機結果"
                     judge_money = "＊失敗：申し訳ありません、この商品は現在お売りすることができません"
 
-            #金額・商品共に条件通り入力されているが、公開されていない
+            #金額・商品共に条件通り入力されているが、在庫がない
             elif bought["stock"] == 0:
                     message = "自動販売機結果"
                     judge_money = "＊失敗：現在在庫がありません"
@@ -460,6 +460,7 @@ def user():
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
             print("データベースが存在しません。")
         else:
+
             print(err)
     else:
         cnx.close()
