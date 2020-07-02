@@ -273,9 +273,9 @@ def admin_status():
 
     #ステータス変更が押された場合、値を取得
     if "change_status" in request.form.keys():
-        drink_id = request.form.get("drink_id")
-        drink_name = request.form.get("drink_name")
-        next_status = request.form.get("change_status")
+        drink_id = request.form.get("drink_id", "")
+        drink_name = request.form.get("drink_name", "")
+        next_status = request.form.get("change_status", "")
 
 
     #mysqlに接続ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
@@ -285,18 +285,17 @@ def admin_status():
 
 
         #公開・非公開のボタンが押された場合ーーーーーーーーーーーーーーーーーーーーーーーーーーーー
-        if "change_status" in request.form.keys():
+        if "change_status" in request.form.keys() and drink_id != "" and drink_id != None:
             #押されたボタン(現在のステータス)とは逆のステータスに変更
-            if drink_id != "" and drink_id != None:
-                status_update = f'UPDATE drink_table SET status = {next_status} WHERE drink_id = {drink_id}'
-                date_update = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {drink_id}'
-                cursor.execute(status_update)
-                cursor.execute(date_update)
-                cnx.commit()
-                if next_status == "1":
-                    change_message = "＊成功：" + drink_name + "のステータスを「公開」に変更しました"
-                elif next_status == "0":
-                    change_message = "＊成功：" + drink_name + "のステータスを「非公開」に変更しました"
+            status_update = f'UPDATE drink_table SET status = {next_status} WHERE drink_id = {drink_id}'
+            date_update = f'UPDATE drink_table SET update_date = LOCALTIME() WHERE drink_id = {drink_id}'
+            cursor.execute(status_update)
+            cursor.execute(date_update)
+            cnx.commit()
+            if next_status == "1":
+                change_message = "＊成功：" + drink_name + "のステータスを「公開」に変更しました"
+            elif next_status == "0":
+                change_message = "＊成功：" + drink_name + "のステータスを「非公開」に変更しました"
 
 
         #常時実行するSQL
