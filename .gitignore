@@ -1,6 +1,6 @@
 # Folder view configuration files
 .DS_Store
 __pycache__
-vscode
+.vscode
 venv
 static
